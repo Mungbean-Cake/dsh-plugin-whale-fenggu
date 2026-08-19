@@ -1,0 +1,48 @@
+{
+  "name": "dsh-plugin-whale-fenggu",
+  "version": "1.0.0",
+  "description": "蓝色大肥鱼 · DeepSeek 峰谷提醒：北京时间「梁文峰/梁文谷」实时播报、切换前提前提醒、省 token 小贴士、自由拖动（纯前端，兼容 blue-fantasy 皮肤风格）",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "keywords": [
+    "dsh",
+    "deepseek",
+    "deepseek-harness",
+    "plugin",
+    "peak-valley",
+    "vision",
+    "fishing",
+    "梁文峰",
+    "梁文谷",
+    "峰谷提醒",
+    "蓝色大肥鱼"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mungbean-Cake/dsh-plugin-whale-fenggu.git"
+  },
+  "homepage": "https://github.com/Mungbean-Cake/dsh-plugin-whale-fenggu#readme",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [],
+      "platform": "web"
+    }
+  },
+  "bugs": {
+    "url": "https://github.com/Mungbean-Cake/dsh-plugin-whale-fenggu/issues"
+  }
+}

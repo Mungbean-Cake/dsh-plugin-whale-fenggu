@@ -1,0 +1,5 @@
+# dsh-plugin-whale-fenggu bundle patch
+# Inserts the plugin row; all logic lives in the browser half (lib/client.js).
+- insert:
+    - id: whale-fenggu-reminder
+      name: 'dsh-plugin-whale-fenggu'
