@@ -9,7 +9,7 @@ window.__ModuleLoader__.load({
     function apply() {
       /* widget 代码：在插件激活时运行（自带 DOM ready 处理与去重） */
       /*!
-       * 蓝色大肥鱼 · 梁文峰 / 梁文谷 提醒插件 (whale-fenggu-reminder) v1.0.1
+       * 蓝色大肥鱼 · 梁文峰 / 梁文谷 提醒插件 (whale-fenggu-reminder) v1.1.0
        * =====================================================================
        * 纯前端自包含模块：无依赖、无需构建。
        * v0.3.0 加固：
@@ -26,7 +26,7 @@ window.__ModuleLoader__.load({
         var CFG_KEY = NS + ':config';
         var MIN_MS = 60 * 1000;
         var DAY_MS = 24 * 60 * MIN_MS;
-        var VERSION = '1.0.1';
+        var VERSION = '1.1.0';
       
         // 已存在且仍在文档里 → 不重复初始化；否则（被外部清掉）重建
         var existing = null;
@@ -71,6 +71,9 @@ window.__ModuleLoader__.load({
             pos: null,
             toast: true,
             tips: true,
+            opacity: 0.95,
+            visible: true,
+            minimal: false,
             lastNotified: '{}'
           };
           try {
@@ -234,7 +237,17 @@ window.__ModuleLoader__.load({
             '#' + NS + '-help{margin-top:8px;font-size:12px;color:#b9c4f0;}',
             '#' + NS + '-help li{margin:3px 0;}',
             '#' + NS + '-badge{display:inline-block;background:rgba(142,164,255,.18);border:1px solid rgba(142,164,255,.5);color:#c7d2ff;border-radius:999px;padding:1px 8px;font-size:11px;margin-left:6px;}',
-            '#' + NS + '-drag-hint{font-size:10px;color:#7f8fc4;margin-top:2px;text-align:center;cursor:grab;}',
+            '#' + NS + '-dot{position:fixed;z-index:2147483644;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;background:rgba(36,44,84,.88);border:1px solid rgba(122,140,255,.55);box-shadow:0 4px 14px rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}',
+      '#' + NS + '-dot:hover{background:rgba(52,64,110,.95);}',
+      '#' + NS + '-expand{display:none;flex:none;border:none;background:rgba(122,140,255,.16);color:#dbe4ff;border-radius:7px;padding:1px 8px;font-size:12px;cursor:pointer;margin-left:auto;}',
+      '#' + NS + '-root.wf-minimal #' + NS + '-expand{display:inline-block;}',
+      '#' + NS + '-root.wf-minimal #' + NS + '-tip{display:none;}',
+      '#' + NS + '-root.wf-minimal #' + NS + '-actions{display:none;}',
+      '#' + NS + '-root.wf-minimal #' + NS + '-panel{display:none;}',
+      '#' + NS + '-root.wf-minimal #' + NS + '-drag-hint{display:none;}',
+      '#' + NS + '-root.wf-minimal{width:auto;min-width:150px;padding:8px 12px;}',
+      '#' + NS + '-opacity{accent-color:#8ea4ff;width:70px;height:18px;cursor:pointer;}',
+      '#' + NS + '-opacity-val{min-width:38px;text-align:right;color:#c7d2ff;font-size:11px;}',
       '/* ===== UI 微调（原平衡插件内注入内容，现已并入本插件）===== */',
       '.dshMarketLauncher { display: none !important; }',
       '[class$="_footerActions"] { flex-wrap: wrap !important; }',
@@ -269,6 +282,21 @@ window.__ModuleLoader__.load({
           root.classList.remove('wf-left', 'wf-right');
         }
       
+        function positionDot() {
+          try {
+            var dotEl = document.getElementById(NS + '-dot');
+            if (!dotEl) return;
+            var cfg = loadCfg();
+            var pos = sanitizePos(cfg.pos);
+            var x, y;
+            if (pos) { x = pos.x; y = pos.y; }
+            else if (cfg.position === 'right') { x = Math.max(0, (window.innerWidth || 800) - 44 - 14); y = Math.max(0, (window.innerHeight || 600) - 44 - 18); }
+            else { x = 14; y = Math.max(0, (window.innerHeight || 600) - 44 - 104); }
+            dotEl.style.left = x + 'px';
+            dotEl.style.top = y + 'px';
+          } catch (e) { /* ignore */ }
+        }
+      
         function render() {
           try {
             var cfg = loadCfg();
@@ -280,6 +308,16 @@ window.__ModuleLoader__.load({
       
             if (!root || !document.body.contains(root)) return;
             if (!drag) applyPosition();
+            root.style.opacity = String(cfg.opacity);
+            var dotEl = document.getElementById(NS + '-dot');
+            if (cfg.visible) {
+              root.style.display = '';
+              if (dotEl) dotEl.style.display = 'none';
+            } else {
+              root.style.display = 'none';
+              if (dotEl) { dotEl.style.display = 'flex'; positionDot(); }
+            }
+            root.classList.toggle('wf-minimal', !!cfg.minimal);
             root.querySelector('#' + NS + '-phase').textContent = phase;
             root.querySelector('#' + NS + '-badge').textContent = isPeakAt(min) ? '⛰️ 高峰贵' : '🌙 谷时便宜';
             root.querySelector('#' + NS + '-clock').textContent = '北京时间 ' + clock + ' · ' + tr.minutesLeft + ' 分钟后切【' + tr.toName + '】';
@@ -292,7 +330,15 @@ window.__ModuleLoader__.load({
             root.querySelector('#' + NS + '-position').value = cfg.pos ? 'custom' : cfg.position;
             root.querySelector('#' + NS + '-toast').checked = cfg.toast;
             root.querySelector('#' + NS + '-tips').checked = cfg.tips;
-            root.style.opacity = cfg.enabled ? '1' : '.55';
+            var opEl = root.querySelector('#' + NS + '-opacity');
+            if (opEl) opEl.value = String(cfg.opacity);
+            var opvEl = root.querySelector('#' + NS + '-opacity-val');
+            if (opvEl) opvEl.textContent = Math.round(cfg.opacity * 100) + '%';
+            var visEl = root.querySelector('#' + NS + '-visible');
+            if (visEl) visEl.checked = cfg.visible;
+            var minEl = root.querySelector('#' + NS + '-minimal');
+            if (minEl) minEl.checked = cfg.minimal;
+            // 透明度由 cfg.opacity 控制
           } catch (e) {
             if (window.console && console.error) console.error(NS + ': render error', e);
           }
@@ -331,6 +377,7 @@ window.__ModuleLoader__.load({
           root.innerHTML =
             '<div id="' + NS + '-head" title="按住拖动换位置">' +
             '  <span id="' + NS + '-avatar">🐳</span>' +
+            '  <button id="' + NS + '-expand" type="button" data-act="expand" title="退出极简模式">⤢</button>' +
             '  <div><div id="' + NS + '-title">蓝色大肥鱼<span id="' + NS + '-badge"></span></div>' +
             '  <div style="font-size:11px;color:#8fa0d8;">DeepSeek 峰谷提醒 v' + VERSION + '</div></div>' +
             '</div>' +
@@ -347,6 +394,9 @@ window.__ModuleLoader__.load({
             '  <label>提前提醒（分钟） <input type="number" id="' + NS + '-lead" min="1" max="120" step="1"></label>' +
             '  <label>位置 <select id="' + NS + '-position"><option value="left">左下</option><option value="right">右下</option><option value="custom">自定义（拖动）</option></select></label>' +
             '  <label>站内 toast <input type="checkbox" id="' + NS + '-toast"></label>' +
+            '  <label>透明度 <input type="range" id="' + NS + '-opacity" min="0.2" max="1" step="0.05"><span id="' + NS + '-opacity-val">95%</span></label>' +
+            '  <label>显示卡片 <input type="checkbox" id="' + NS + '-visible"></label>' +
+            '  <label>极简模式（只显示状态） <input type="checkbox" id="' + NS + '-minimal"></label>' +
             '  <label>小贴士轮播 <input type="checkbox" id="' + NS + '-tips"></label>' +
             '  <label>复位位置 <button type="button" data-act="reset" style="flex:none;padding:2px 10px;border-radius:7px;border:1px solid rgba(122,140,255,.5);background:rgba(122,140,255,.14);color:#dbe4ff;font-size:12px;cursor:pointer;">🔄 回左下角</button></label>' +
             '  <div id="' + NS + '-help">🐳 省 token 手册：' +
@@ -356,13 +406,30 @@ window.__ModuleLoader__.load({
             '    <li>高峰少跑重活，谷时再冲业绩</li>' +
             '    <li>写累了站起来蹬，清醒省 token</li></ul></div>' +
             '</div>' +
-            '<div id="' + NS + '-drag-hint">⠿ 按住拖动 · 双击复位 · 位置自动记忆</div>';
+            '<div id="' + NS + '-drag-hint">⠿ 按住拖动 · 设置里可复位</div>';
           document.body.appendChild(root);
       
           // ---- 位置钉死（内联样式，不依赖外部 CSS；即使后续渲染出错也不离屏）----
           root.style.position = 'fixed';
           root.style.zIndex = '2147483645';
           applyPosition();
+      
+          // ---- 隐藏态小鱼圆点 ----
+          var oldDot = document.getElementById(NS + '-dot');
+          if (oldDot) oldDot.remove();
+          var dotEl = document.createElement('div');
+          dotEl.id = NS + '-dot';
+          dotEl.title = '点我恢复小肥鱼';
+          dotEl.textContent = '🐳';
+          dotEl.style.display = 'none';
+          document.body.appendChild(dotEl);
+          dotEl.addEventListener('click', function () {
+            var cfgd = loadCfg();
+            cfgd.visible = true;
+            saveCfg(cfgd);
+            render();
+          });
+          positionDot();
       
           // ---- 自由拖动 ----
           root.addEventListener('pointerdown', function (e) {
@@ -439,6 +506,11 @@ window.__ModuleLoader__.load({
             } else if (act === 'test') {
               var tr = nextTransition(new Date());
               toast(COPY.test.replace('{phase}', tr.toName));
+            } else if (act === 'expand') {
+              var cfgx = loadCfg();
+              cfgx.minimal = false;
+              saveCfg(cfgx);
+              render();
             } else if (act === 'reset') {
               var cfg2 = loadCfg();
               cfg2.pos = null;
@@ -470,6 +542,11 @@ window.__ModuleLoader__.load({
                 }
               } else if (id === NS + '-toast') cfg.toast = e.target.checked;
               else if (id === NS + '-tips') cfg.tips = e.target.checked;
+              else if (id === NS + '-opacity') {
+                var ov = parseFloat(e.target.value);
+                if (isFinite(ov)) cfg.opacity = Math.min(1, Math.max(0.2, ov));
+              } else if (id === NS + '-visible') cfg.visible = e.target.checked;
+              else if (id === NS + '-minimal') cfg.minimal = e.target.checked;
               saveCfg(cfg);
               render();
               var tr = nextTransition(new Date());

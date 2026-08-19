@@ -79,6 +79,9 @@ dsh plugin --profile web add <本项目路径>
 | `leadMinutes` | 10 | 切换前提前提醒分钟数（1–120） |
 | `position` | left | 预设位置：左下 / 右下 |
 | `pos` | null | 自定义坐标（拖动后自动记录 `{x,y}`） |
+| `opacity` | 0.95 | 卡片透明度（0.2–1，滑块调节） |
+| `visible` | true | 显示开关（关掉后缩成小鱼圆点，点击恢复） |
+| `minimal` | false | 极简模式（只显示当前状态，⤢ 退出） |
 | `toast` | true | 站内 toast 提醒开关 |
 | `tips` | true | 省 token 小贴士轮播开关 |
 | `lastNotified` | {} | 已提醒记录（防重复，自动维护） |
