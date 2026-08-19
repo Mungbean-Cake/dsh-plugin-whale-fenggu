@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-whale-fenggu",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "蓝色大肥鱼 · DeepSeek 峰谷提醒：北京时间「梁文峰/梁文谷」实时播报、切换前提前提醒、省 token 小贴士、自由拖动（纯前端，兼容 blue-fantasy 皮肤风格）",
   "type": "module",
   "main": "lib/index.js",
